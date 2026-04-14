@@ -1,0 +1,11 @@
+---
+apiVersion: azure.gusta-lab.com/v1
+kind: ResourceGroup
+metadata:
+  name: rg-gusta-lab-sandbox
+spec:
+  subscription: sub-gusta-labs
+  location: southcentralus
+  tags:
+    env: sandbox
+    team: platform

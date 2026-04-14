@@ -1,0 +1,96 @@
+---
+apiVersion: apiextensions.crossplane.io/v2
+kind: CompositeResourceDefinition
+metadata:
+  name: storageaccounts.azure.gusta-lab.com
+spec:
+  group: azure.gusta-lab.com
+  scope: Cluster
+  names:
+    kind: StorageAccount
+    plural: storageaccounts
+    shortNames:
+      - sa
+  versions:
+    - name: v1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - resourceGroupName
+              properties:
+                subscription:
+                  type: string
+                  description: Alias da subscription Azure — ex. sub-gusta-labs
+                  pattern: '^[a-z0-9][a-z0-9\-]*[a-z0-9]$'
+
+                resourceGroupName:
+                  type: string
+                  description: Nome do Resource Group onde a Storage Account será criada
+                  pattern: '^[a-zA-Z0-9._\-()]{1,90}$'
+
+                location:
+                  type: string
+                  description: Região Azure (sobrescreve o default do EnvironmentConfig)
+                  enum:
+                    - eastus
+                    - eastus2
+                    - southcentralus
+                    - brazilsouth
+
+                accountTier:
+                  type: string
+                  description: Tier da Storage Account
+                  default: Standard
+                  enum:
+                    - Standard
+                    - Premium
+
+                accountReplicationType:
+                  type: string
+                  description: Tipo de replicação dos dados
+                  default: LRS
+                  enum:
+                    - LRS
+                    - GRS
+                    - ZRS
+                    - GZRS
+                    - RA-GRS
+                    - RA-GZRS
+
+                accountKind:
+                  type: string
+                  description: Tipo de Storage Account
+                  default: StorageV2
+                  enum:
+                    - StorageV2
+                    - BlobStorage
+                    - BlockBlobStorage
+                    - FileStorage
+                    - Storage
+
+                accessTier:
+                  type: string
+                  description: Tier de acesso padrão para blobs (usado quando accountKind é StorageV2 ou BlobStorage)
+                  default: Hot
+                  enum:
+                    - Hot
+                    - Cool
+
+                tags:
+                  type: object
+                  description: Tags aplicadas à Storage Account (max 50 tags)
+                  maxProperties: 50
+                  additionalProperties:
+                    type: string
+                    maxLength: 256
+                  x-kubernetes-validations:
+                    - rule: "self.all(k, k.size() <= 128)"
+                      message: "chaves de tag não podem ter mais de 128 caracteres"
+                    - rule: "self.all(k, !k.startsWith('microsoft:') && !k.startsWith('azure:'))"
+                      message: "chaves de tag não podem começar com 'microsoft:' ou 'azure:' (reservado pelo Azure)"

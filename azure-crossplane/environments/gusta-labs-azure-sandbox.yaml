@@ -1,0 +1,11 @@
+---
+apiVersion: apiextensions.crossplane.io/v1beta1
+kind: EnvironmentConfig
+metadata:
+  name: azure-sub-gusta-labs
+  labels:
+    azure.gusta-lab.com/subscription: sub-gusta-labs
+data:
+  subscription: sub-gusta-labs
+  subscriptionId: 7cbd3afd-8a5d-4249-a691-9809efbbc0d7
+  location: southcentralus

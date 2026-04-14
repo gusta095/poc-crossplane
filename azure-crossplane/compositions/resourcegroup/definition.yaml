@@ -1,0 +1,52 @@
+---
+apiVersion: apiextensions.crossplane.io/v2
+kind: CompositeResourceDefinition
+metadata:
+  name: resourcegroups.azure.gusta-lab.com
+spec:
+  group: azure.gusta-lab.com
+  scope: Cluster
+  names:
+    kind: ResourceGroup
+    plural: resourcegroups
+    shortNames:
+      - rg
+  versions:
+    - name: v1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - subscription
+              properties:
+                subscription:
+                  type: string
+                  description: Alias da subscription Azure — ex. sub-gusta-labs
+                  pattern: '^[a-z0-9][a-z0-9\-]*[a-z0-9]$'
+
+                location:
+                  type: string
+                  description: Região Azure (sobrescreve o default do EnvironmentConfig)
+                  enum:
+                    - eastus
+                    - eastus2
+                    - southcentralus
+                    - brazilsouth
+
+                tags:
+                  type: object
+                  description: Tags aplicadas ao Resource Group (max 50 tags)
+                  maxProperties: 50
+                  additionalProperties:
+                    type: string
+                    maxLength: 256
+                  x-kubernetes-validations:
+                    - rule: "self.all(k, k.size() <= 128)"
+                      message: "chaves de tag não podem ter mais de 128 caracteres"
+                    - rule: "self.all(k, !k.startsWith('microsoft:') && !k.startsWith('azure:'))"
+                      message: "chaves de tag não podem começar com 'microsoft:' ou 'azure:' (reservado pelo Azure)"

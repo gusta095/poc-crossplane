@@ -1,0 +1,19 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: crossplane-pod-monitor
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  namespaceSelector:
+    matchNames:
+      - crossplane-system
+  selector:
+    matchLabels:
+      app: crossplane
+  podMetricsEndpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s

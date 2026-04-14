@@ -1,0 +1,35 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: headlamp
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: infra
+  source:
+    repoURL: https://kubernetes-sigs.github.io/headlamp
+    chart: headlamp
+    targetRevision: "0.41.0"
+    helm:
+      values: |
+        clusterRoleBinding:
+          create: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: headlamp
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true # Faz o ArgoCD usar o Server-Side Apply para aplicar as mudanças,
+      # o que pode ajudar a evitar conflitos de configuração e melhorar a eficiência da sincronização.
+
+
+# kubectl port-forward -n headlamp svc/headlamp 4466:80
+# kubectl create token headlamp -n headlamp

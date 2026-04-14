@@ -1,0 +1,101 @@
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: storageaccount-azure
+  labels:
+    provider: azure
+    crossplane.io/xrd: storageaccounts.azure.gusta-lab.com
+spec:
+  compositeTypeRef:
+    apiVersion: azure.gusta-lab.com/v1
+    kind: StorageAccount
+
+  mode: Pipeline
+  pipeline:
+    - step: environment-configs
+      functionRef:
+        name: function-environment-configs
+      input:
+        apiVersion: environmentconfigs.fn.crossplane.io/v1beta1
+        kind: Input
+        spec:
+          environmentConfigs:
+            # carrega o EnvironmentConfig da subscription por referência direta
+            # isso permite que spec.subscription seja opcional no Claim
+            - type: Reference
+              ref:
+                name: azure-sub-gusta-labs
+
+    - step: create-resources
+      functionRef:
+        name: function-patch-and-transform
+      input:
+        apiVersion: pt.fn.crossplane.io/v1beta1
+        kind: Resources
+        resources:
+          - name: storage-account
+            base:
+              apiVersion: storage.azure.upbound.io/v1beta2
+              kind: Account
+              spec:
+                forProvider:
+                  location: eastus
+            patches:
+              # nome da Storage Account vem do metadata.name do XR
+              # atenção: Azure exige 3-24 caracteres, apenas letras minúsculas e números
+              - type: FromCompositeFieldPath
+                fromFieldPath: metadata.name
+                toFieldPath: metadata.name
+
+              # providerConfigRef: default vem do EnvironmentConfig, sobrescrito se spec.subscription for informado
+              - type: FromEnvironmentFieldPath
+                fromFieldPath: subscription
+                toFieldPath: spec.providerConfigRef.name
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.subscription
+                toFieldPath: spec.providerConfigRef.name
+                policy:
+                  fromFieldPath: Optional
+
+              # resource group onde a storage account será criada
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.resourceGroupName
+                toFieldPath: spec.forProvider.resourceGroupName
+
+              # location: default do EnvironmentConfig, sobrescrito se informado
+              - type: FromEnvironmentFieldPath
+                fromFieldPath: location
+                toFieldPath: spec.forProvider.location
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.location
+                toFieldPath: spec.forProvider.location
+                policy:
+                  fromFieldPath: Optional
+
+              # tier da storage account (Standard ou Premium)
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.accountTier
+                toFieldPath: spec.forProvider.accountTier
+
+              # tipo de replicação
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.accountReplicationType
+                toFieldPath: spec.forProvider.accountReplicationType
+
+              # kind da storage account
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.accountKind
+                toFieldPath: spec.forProvider.accountKind
+
+              # tier de acesso padrão para blobs
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.accessTier
+                toFieldPath: spec.forProvider.accessTier
+
+              # tags customizadas
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.tags
+                toFieldPath: spec.forProvider.tags
+                policy:
+                  fromFieldPath: Optional

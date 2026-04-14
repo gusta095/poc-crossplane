@@ -1,0 +1,10 @@
+---
+apiVersion: azure.gusta-lab.com/v1
+kind: StorageAccount
+metadata:
+  name: gustalabstestesandbos
+spec:
+  resourceGroupName: rg-gusta-lab-sandbox
+  tags:
+    env: sandbox
+    team: platform

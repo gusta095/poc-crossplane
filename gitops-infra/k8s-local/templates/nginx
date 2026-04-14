@@ -1,0 +1,25 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nginx        # nome da Application no ArgoCD
+  namespace: argocd  # sempre argocd — é onde o ArgoCD vive
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: infra 
+  source:
+    repoURL: https://github.com/gusta-lab/helm-charts # repo do chart
+    path: charts/nginx   # caminho para o chart dentro do repo
+    targetRevision: main # branch, tag ou commit
+  destination:
+    server: https://kubernetes.default.svc # cluster Kubernetes onde a aplicação será implantada
+    namespace: nginx # namespace onde a aplicação será implantada
+  syncPolicy:
+    automated:
+      prune: true    # remove recursos que não estão mais no repo
+      selfHeal: true # reverte mudanças manuais para o estado definido no repo
+    syncOptions:
+      - CreateNamespace=true # cria o namespace se ele não existir

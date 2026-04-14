@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: aws
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: Crossplane providers e compositions AWS
+
+  # Repos permitidos nesse project
+  sourceRepos:
+    - '*'
+
+  # Destinos permitidos
+  destinations:
+    - namespace: '*'
+      server: https://kubernetes.default.svc
+
+  # Pode criar recursos de cluster (CRD, ClusterRole, etc)
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+
+  # Namespaces que esse project pode gerenciar
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'

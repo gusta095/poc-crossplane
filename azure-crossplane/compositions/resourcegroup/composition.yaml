@@ -1,0 +1,71 @@
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: resourcegroup-azure
+  labels:
+    provider: azure
+    crossplane.io/xrd: resourcegroups.azure.gusta-lab.com
+spec:
+  compositeTypeRef:
+    apiVersion: azure.gusta-lab.com/v1
+    kind: ResourceGroup
+
+  mode: Pipeline
+  pipeline:
+    - step: environment-configs
+      functionRef:
+        name: function-environment-configs
+      input:
+        apiVersion: environmentconfigs.fn.crossplane.io/v1beta1
+        kind: Input
+        spec:
+          environmentConfigs:
+            - type: Selector
+              selector:
+                matchLabels:
+                  - key: azure.gusta-lab.com/subscription
+                    type: FromCompositeFieldPath
+                    valueFromFieldPath: spec.subscription
+
+    - step: create-resources
+      functionRef:
+        name: function-patch-and-transform
+      input:
+        apiVersion: pt.fn.crossplane.io/v1beta1
+        kind: Resources
+        resources:
+          - name: resource-group
+            base:
+              apiVersion: azure.upbound.io/v1beta1
+              kind: ResourceGroup
+              spec:
+                forProvider:
+                  location: eastus
+            patches:
+              # nome do Resource Group vem do metadata.name do XR
+              - type: FromCompositeFieldPath
+                fromFieldPath: metadata.name
+                toFieldPath: metadata.name
+
+              # providerConfigRef aponta para o ProviderConfig da subscription
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.subscription
+                toFieldPath: spec.providerConfigRef.name
+
+              # location: default do EnvironmentConfig, sobrescrito se informado
+              - type: FromEnvironmentFieldPath
+                fromFieldPath: location
+                toFieldPath: spec.forProvider.location
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.location
+                toFieldPath: spec.forProvider.location
+                policy:
+                  fromFieldPath: Optional
+
+              # tags customizadas
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.tags
+                toFieldPath: spec.forProvider.tags
+                policy:
+                  fromFieldPath: Optional

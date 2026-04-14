@@ -1,0 +1,63 @@
+################################################################################
+# HA desabilitado — lab/local
+################################################################################
+redis-ha:
+  enabled: false
+
+################################################################################
+# Componentes — réplicas + recursos juntos
+################################################################################
+controller:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+server:
+  replicas: 1
+  extraArgs:
+    - --insecure
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+
+repoServer:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 1Gi
+
+applicationSet:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+
+redis:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+
+################################################################################
+# Configs
+################################################################################
+configs:
+  params:
+    server.insecure: "true"
+  cm:
+    timeout.reconciliation: 30s
